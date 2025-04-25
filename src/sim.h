@@ -1,22 +1,21 @@
 #ifndef SIM_H
 #define SIM_H
 
-#ifdef SIM_H
-#define SIM_H
-
 #include <GL/glew.h>
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 #include "constants.h"
-#include "kernels.h"
+#include "kernels.cuh"
 
-typedef struct {
+typedef struct
+{
     double *Ez;
     double *Hx;
     double *Hy;
 } EM_field_d;
 
-typedef struct {
+typedef struct
+{
     int mouseX, mouseY;
     bool mouseClicked;
     float amplitude;
@@ -32,7 +31,7 @@ typedef struct {
 } SimState;
 
 // Function declarations
-void init_gpu(SimState * state);
+void init_gpu(SimState *state);
 void display(SimState *state);
 void cleanup(SimState *state);
 

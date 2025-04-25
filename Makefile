@@ -1,17 +1,42 @@
-CUDA_ARCH=sm_35
-INCLUDES=-I./libs/glui/include
-LIBS=-L./libs/glui/lib -lglui -lglut -lGL -lGLU -lGLEW -L/software/slurm/spackages/linux-rocky8-x86_64/gcc-12.3.0/cuda-11.8.0-in72fn46ydgmi5ak67tvzjll5dz4w43u/lib64 -lcudart
+NVCC = nvcc
+CUDA_ARCH = sm_35 # Update this for your GPU (e.g., sm_75, sm_86)
 
-all: em_vis
+# Flags
+NVCCFLAGS = -arch=$(CUDA_ARCH) -O3 # Add -g for debugging
+INCLUDES = -I./src -I./src/util -I./libs/glui/include
+LDFLAGS = -L./libs/glui/lib
+LIBS = -lglui -lglut -lGL -lGLU -lGLEW
 
-main.o: src/main.cu
-	@echo "Compiling main.cu..."
-	nvcc -arch=$(CUDA_ARCH) $(INCLUDES) -c src/main.cu -o main.o || exit 1
+TARGET = em_vis
 
-em_vis: main.o
-	@echo "Linking em_vis..."
-	g++ main.o $(LIBS) -o em_vis || exit 1
-	@echo "Build complete. Run ./em_vis"
+# Source and Object files
+SRCS = $(wildcard src/*.cu src/*.c src/util/*.c)
+OBJS = $(patsubst %.cu,%.o,$(patsubst %.c,%.o,$(SRCS)))
 
+# Header files (simplified dependency tracking)
+HEADERS = $(wildcard src/*.h src/util/*.h src/*.cuh) common.h libs/glui/include/GL/glui.h
+
+# Default target
+all: $(TARGET)
+
+# Linking rule
+$(TARGET): $(OBJS)
+    @echo "Linking $(TARGET)..."
+    $(NVCC) $(NVCCFLAGS) $(OBJS) $(LDFLAGS) $(LIBS) -o $(TARGET)
+    @echo "Build complete. Run ./$(TARGET)"
+
+%.o: %.cu $(HEADERS)
+    @echo "Compiling $<..."
+    $(NVCC) $(NVCCFLAGS) $(INCLUDES) -c $< -o $@
+
+%.o: %.c $(HEADERS)
+    @echo "Compiling $<..."
+    $(NVCC) $(NVCCFLAGS) $(INCLUDES) -c $< -o $@
+
+# Clean rule
 clean:
-	rm -f *.o em_vis
+    @echo "Cleaning up..."
+    rm -f $(OBJS) $(TARGET)
+    @echo "Cleanup complete."
+
+.PHONY: all clean

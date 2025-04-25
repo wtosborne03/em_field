@@ -11,17 +11,27 @@
 #include "sim.h"
 
 static SimState *global_state = NULL;
+static SimState state;
 
-int main(int argc, char** argv) {
+void display_wrapper()
+{
+    if (global_state)
+    {
+        display(global_state);
+    }
+}
+
+int main(int argc, char **argv)
+{
 
     // defaults
-    static SimState state = {
+    state = (SimState){
         .mouseX = -1,
         .mouseY = -1,
         .mouseClicked = false,
         .amplitude = 10.0f,
-        .boxSize = 50.0f
-    };
+        .boxSize = 50.0f};
+    global_state = &state;
 
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
@@ -30,7 +40,8 @@ int main(int argc, char** argv) {
     int main_window = glutCreateWindow("CUDA EM Sim");
 
     GLenum err = glewInit();
-    if (err != GLEW_OK) {
+    if (err != GLEW_OK)
+    {
         fprintf(stderr, "Error initializing GLEW: %s\n", glewGetErrorString(err));
         exit(1);
     }
@@ -45,8 +56,8 @@ int main(int argc, char** argv) {
 
     create_pbo(global_state);
 
-    glutDisplayFunc(display);
-    set_sim_state(global_state); //register state with input callbacks
+    glutDisplayFunc(display_wrapper);
+    set_sim_state(global_state); // register state with input callbacks
     glutKeyboardFunc(keyboard);
     glutMouseFunc(mouse_func);
 
