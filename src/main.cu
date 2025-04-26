@@ -6,9 +6,9 @@
 #include <GL/glui.h>
 
 #include "util/pbo.h"
-#include "util/input.h"
+#include "util/input.cuh"
 #include "constants.h"
-#include "sim.h"
+#include "sim.cuh"
 
 static SimState *global_state = NULL;
 static SimState state;
@@ -60,6 +60,7 @@ int main(int argc, char **argv)
     set_sim_state(global_state); // register state with input callbacks
     glutKeyboardFunc(keyboard);
     glutMouseFunc(mouse_func);
+    glutMotionFunc(motion_func);
 
     glutMainLoop();
     return 0;

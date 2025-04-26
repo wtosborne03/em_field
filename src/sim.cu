@@ -1,4 +1,4 @@
-#include "sim.h"
+#include "sim.cuh"
 
 const float dx = 0.01f;
 const float mu0 = 4.0f * M_PI * 1e-7f; // permeability
@@ -43,6 +43,11 @@ void display(SimState *state)
 
     mur_boundary<<<(SIZE_X * SIZE_Y + 255) / 256, 256>>>(state->d_Ez, SIZE_X, SIZE_Y, (c * dt / dx), state->d_Ez_prev);
     apply_pec_mask<<<(SIZE_X * SIZE_Y + 255) / 256, 256>>>(state->d_field, state->d_Pec_Mask, SIZE_X * SIZE_Y);
+
+    if (state->mouseClicked) {
+            dim3 block(16, 16), grid((SIZE_X + 15) / 16, (SIZE_Y + 15) / 16);
+            gaussian_pulse<<<grid, block>>>(state->d_field, SIZE_X, SIZE_Y,state->mouseX, SIZE_Y - state->mouseY, state->amplitude, 10.0f);
+    }
 
     float *d_pbo;
     size_t num_bytes;

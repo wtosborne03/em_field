@@ -1,7 +1,7 @@
 #ifndef KERNELS_CUH
 #define KERNELS_CUH
 
-#include "sim.h"
+#include "sim.cuh"
 
 __global__ void updateE(EM_field_d *field, int width, int height, double CeE);
 __global__ void updateH(EM_field_d *field, int width, int height, double CeH);

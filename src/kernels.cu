@@ -1,4 +1,4 @@
-#include "kernels.h"
+#include "kernels.cuh"
 
 __global__ void updateE(EM_field_d *field, int width, int height, double CeE) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;

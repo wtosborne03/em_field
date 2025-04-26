@@ -1,5 +1,5 @@
-#ifndef SIM_H
-#define SIM_H
+#ifndef SIM_CUH
+#define SIM_CUH
 
 #include <GL/glew.h>
 #include <cuda_runtime.h>
