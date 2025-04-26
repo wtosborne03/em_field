@@ -9,29 +9,31 @@ LIBS = -lglui -lglut -lGL -lGLU -lGLEW
 
 TARGET = em_vis
 
-SRCS = $(wildcard src/*.cu src/*.c src/util/*.c)
+#all .cu and .c source files
+SRCS = $(wildcard src/*.cu) $(wildcard src/util/*.cu) $(wildcard src/util/*.c)
 OBJS = $(patsubst %.cu,%.o,$(patsubst %.c,%.o,$(SRCS)))
 
-HEADERS = $(wildcard src/*.h src/util/*.h src/*.cuh) common.h libs/glui/include/GL/glui.h
+#all .h and .cuh header files
+HEADERS = $(wildcard src/*.h) $(wildcard src/util/*.h) $(wildcard src/*.cuh) $(wildcard src/util/*.cuh) $(wildcard libs/glui/include/GL/*.h)
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	@echo "Linking $(TARGET)..."
-	$(NVCC) $(NVCCFLAGS) $(OBJS) $(LDFLAGS) $(LIBS) -o $(TARGET)
-	@echo "Build complete. Run ./$(TARGET)"
+    @echo "Linking $(TARGET)..."
+    $(NVCC) $(NVCCFLAGS) $(OBJS) $(LDFLAGS) $(LIBS) -o $(TARGET)
+    @echo "Build complete. Run ./$(TARGET)"
 
 %.o: %.cu $(HEADERS)
-	@echo "Compiling CUDA $<..."
-	$(NVCC) $(NVCCFLAGS) $(INCLUDES) -c $< -o $@
+    @echo "Compiling CUDA $<..."
+    $(NVCC) $(NVCCFLAGS) $(INCLUDES) -c $< -o $@
 
 %.o: %.c $(HEADERS)
-	@echo "Compiling C $<..."
-	$(NVCC) $(NVCCFLAGS) $(INCLUDES) -x c -c $< -o $@
+    @echo "Compiling C $<..."
+    $(NVCC) $(NVCCFLAGS) $(INCLUDES) -x c -c $< -o $@
 
 clean:
-	@echo "Cleaning up..."
-	rm -f $(OBJS) $(TARGET)
-	@echo "Cleanup complete."
+    @echo "Cleaning up..."
+    rm -f $(OBJS) $(TARGET)
+    @echo "Cleanup complete."
 
 .PHONY: all clean
