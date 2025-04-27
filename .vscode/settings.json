@@ -1,6 +1,9 @@
 {
     "files.associations": {
         "*.ejs": "html",
-        "locale": "cpp"
+        "locale": "cpp",
+        "ios": "cpp",
+        "sim.cuh": "c",
+        "constants.h": "c"
     }
 }

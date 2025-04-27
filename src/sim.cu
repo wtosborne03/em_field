@@ -27,6 +27,12 @@ void init_gpu(SimState *state)
     cudaMemset(state->d_Pec_Mask, 0, total_size);
 
     cudaMalloc(&(state->d_field), sizeof(EM_field_d));
+
+    EM_field_d h_field; // Host-side temporary struct
+    h_field.Ez = state->d_Ez;
+    h_field.Hx = state->d_Hx;
+    h_field.Hy = state->d_Hy;
+    cudaMemcpy(state->d_field, &h_field, sizeof(EM_field_d), cudaMemcpyHostToDevice);
 }
 
 void display(SimState *state)
@@ -44,16 +50,17 @@ void display(SimState *state)
     mur_boundary<<<(SIZE_X * SIZE_Y + 255) / 256, 256>>>(state->d_Ez, SIZE_X, SIZE_Y, (c * dt / dx), state->d_Ez_prev);
     apply_pec_mask<<<(SIZE_X * SIZE_Y + 255) / 256, 256>>>(state->d_field, state->d_Pec_Mask, SIZE_X * SIZE_Y);
 
-    if (state->mouseClicked) {
-            dim3 block(16, 16), grid((SIZE_X + 15) / 16, (SIZE_Y + 15) / 16);
-            gaussian_pulse<<<grid, block>>>(state->d_field, SIZE_X, SIZE_Y,state->mouseX, SIZE_Y - state->mouseY, state->amplitude, 10.0f);
+    if (state->mouseClicked)
+    {
+        dim3 block(16, 16), grid((SIZE_X + 15) / 16, (SIZE_Y + 15) / 16);
+        gaussian_pulse<<<grid, block>>>(state->d_field, SIZE_X, SIZE_Y, state->mouseX, SIZE_Y - state->mouseY, state->amplitude, 10.0f);
     }
 
     float *d_pbo;
     size_t num_bytes;
 
     cudaGraphicsMapResources(1, &(state->cuda_pbo_resource), 0);
-    cudaGraphicsResourceGetMappedPointer((void **)&d_pbo, &(state->num_bytes), state->cuda_pbo_resource);
+    cudaGraphicsResourceGetMappedPointer((void **)&d_pbo, &num_bytes, state->cuda_pbo_resource);
     write_to_pbo<<<(SIZE_X * SIZE_Y + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(state->d_field, state->d_Pec_Mask, d_pbo, SIZE_X * SIZE_Y);
     cudaGraphicsUnmapResources(1, &(state->cuda_pbo_resource), 0);
 
