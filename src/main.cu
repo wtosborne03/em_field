@@ -5,9 +5,7 @@
 #include <stdio.h>
 #include <GL/glui.h>
 
-#include "util/pbo.h"
 #include "util/input.cuh"
-#include "constants.h"
 #include "sim.cuh"
 
 static SimState *global_state = NULL;

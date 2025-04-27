@@ -19,21 +19,21 @@ HEADERS = $(wildcard src/*.h) $(wildcard src/util/*.h) $(wildcard src/*.cuh) $(w
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-    @echo "Linking $(TARGET)..."
-    $(NVCC) $(NVCCFLAGS) $(OBJS) $(LDFLAGS) $(LIBS) -o $(TARGET)
-    @echo "Build complete. Run ./$(TARGET)"
+	@echo "Linking $(TARGET)..."
+	$(NVCC) $(NVCCFLAGS) $(OBJS) $(LDFLAGS) $(LIBS) -o $(TARGET)
+	@echo "Build complete. Run ./$(TARGET)"
 
 %.o: %.cu $(HEADERS)
-    @echo "Compiling CUDA $<..."
-    $(NVCC) $(NVCCFLAGS) $(INCLUDES) -c $< -o $@
+	@echo "Compiling CUDA $<..."
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) -c $< -o $@
 
 %.o: %.c $(HEADERS)
-    @echo "Compiling C $<..."
-    $(NVCC) $(NVCCFLAGS) $(INCLUDES) -x c -c $< -o $@
+	@echo "Compiling C $<..."
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) -x c -c $< -o $@
 
 clean:
-    @echo "Cleaning up..."
-    rm -f $(OBJS) $(TARGET)
-    @echo "Cleanup complete."
+	@echo "Cleaning up..."
+	rm -f $(OBJS) $(TARGET)
+	@echo "Cleanup complete."
 
 .PHONY: all clean

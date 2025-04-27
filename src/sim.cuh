@@ -5,7 +5,6 @@
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 #include "constants.h"
-#include "kernels.cuh"
 
 typedef struct
 {
@@ -29,6 +28,9 @@ typedef struct
     double *d_Pec_Mask;
     EM_field_d *d_field;
 } SimState;
+
+#include "util/pbo.h"
+
 
 // Function declarations
 void init_gpu(SimState *state);
