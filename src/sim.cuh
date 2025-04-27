@@ -1,10 +1,13 @@
 #ifndef SIM_CUH
 #define SIM_CUH
 
+#include "constants.h"
+
 #include <GL/glew.h>
+#include <GL/glut.h>
+
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
-#include "constants.h"
 
 typedef struct
 {
@@ -28,6 +31,8 @@ typedef struct
     double *d_Pec_Mask;
     EM_field_d *d_field;
 } SimState;
+
+#include "kernels.cuh"
 
 #include "util/pbo.h"
 

@@ -6,8 +6,6 @@
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 
-struct SimState;
-
 void create_pbo(SimState *state);
 void render_pbo();
 
