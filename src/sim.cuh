@@ -5,6 +5,8 @@
 
 #include <GL/glew.h>
 #include <GL/glut.h>
+#include <stdbool.h>
+#include <stdio.h>
 
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
@@ -34,7 +36,7 @@ typedef struct
 
 #include "kernels.cuh"
 
-#include "util/pbo.h"
+#include "util/pbo.cuh"
 
 
 // Function declarations

@@ -55,6 +55,7 @@ void display(SimState *state)
         dim3 block(16, 16), grid((SIZE_X + 15) / 16, (SIZE_Y + 15) / 16);
         gaussian_pulse<<<grid, block>>>(state->d_field, SIZE_X, SIZE_Y, state->mouseX, SIZE_Y - state->mouseY, state->amplitude, 10.0f);
     }
+    printf("MouseX: %f, MouseY: %f\n", state->mouseX, state->mouseY);
 
     float *d_pbo;
     size_t num_bytes;
