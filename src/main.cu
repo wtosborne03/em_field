@@ -22,7 +22,8 @@ void display_wrapper()
 int main(int argc, char **argv)
 {
 
-    typedef enum {
+    typedef enum
+    {
         VACUUM,
         AIR,
         GLASS,
@@ -31,10 +32,10 @@ int main(int argc, char **argv)
     } MaterialType;
 
     material material_list[NUM_MATERIALS] = {
-        {8.854e-12, 1.2566e-6, 0.0, 0.0f, 0.0f, 0.0f, "Vacuum"}, // VACUUM
-        {1.0006 * 8.854e-12, 1.2566e-6, 0.0, 0.5f, 0.5f, 1.0f, "Air"},    // AIR
-        {4.5 * 8.854e-12, 1.2566e-6, 1e-12, 0.3f, 0.8f, 1.0f, "Glass"},  // GLASS
-        {8.854e-12, 1.2566e-6, 1e7, 0.8f, 0.8f, 0.8f, "Metal"}   // METAL
+        {8.854e-12, 1.2566e-6, 0.0, 0.0f, 0.0f, 0.0f, "Vacuum"},        // VACUUM
+        {1.0006 * 8.854e-12, 1.2566e-6, 0.0, 0.5f, 0.5f, 1.0f, "Air"},  // AIR
+        {4.5 * 8.854e-12, 1.2566e-6, 1e-12, 0.3f, 0.8f, 1.0f, "Glass"}, // GLASS
+        {8.854e-12, 1.2566e-6, 1e7, 0.8f, 0.8f, 0.8f, "Metal"}          // METAL
     };
 
     // defaults
@@ -46,8 +47,8 @@ int main(int argc, char **argv)
         .boxSize = 50.0f,
         .dx = 0.5,
         .materials = material_list,
-        .selected_material = VACUUM
-        };
+        .selected_material = VACUUM,
+        .num_materials = NUM_MATERIALS};
     global_state = &state;
 
     glutInit(&argc, argv);
@@ -72,10 +73,11 @@ int main(int argc, char **argv)
     glui->add_spinner("Box Size", GLUI_SPINNER_FLOAT, &(global_state->boxSize), 1, control_cb)->set_float_limits(20.0, 200.0);
 
     GLUI_Listbox *material_listbox = glui->add_listbox("Material Type", &(global_state->selected_material));
-    for (int i = 0; i < NUM_MATERIALS; i++) {
+    for (int i = 0; i < NUM_MATERIALS; i++)
+    {
         material_listbox->add_item(i, global_state->materials[i].name);
     }
-    
+
     glui->set_main_gfx_window(main_window);
 
     create_pbo(global_state);

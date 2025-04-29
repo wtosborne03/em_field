@@ -7,6 +7,7 @@ const float c = 1.0f / sqrt(mu0 * eps0);
 void init_gpu(SimState *state)
 {
     size_t total_size = SIZE_X * SIZE_Y * sizeof(double);
+    size_t materials_size = state->num_materials * sizeof(material);
 
     cudaMalloc(&(state->d_Ez), total_size);
     cudaMalloc(&(state->d_Hx), total_size);
@@ -18,6 +19,7 @@ void init_gpu(SimState *state)
 
     cudaMalloc(&(state->d_Ez_prev), total_size); // same size as Ez
     cudaMalloc(&(state->d_label), SIZE_X * SIZE_Y * sizeof(int));
+    cudaMalloc(&(state->d_materials), materials_size);
 
     // memset
     cudaMemset(state->d_Ez, 0, total_size);
@@ -45,6 +47,8 @@ void init_gpu(SimState *state)
     cudaMemcpy(state->d_epsilon, h_epsilon, total_size, cudaMemcpyHostToDevice);
     cudaMemcpy(state->d_mu, h_mu, total_size, cudaMemcpyHostToDevice);
     cudaMemcpy(state->d_sigma, h_sigma, total_size, cudaMemcpyHostToDevice);
+
+    cudaMemcpy(state->d_materials, state->materials, materials_size, cudaMemcpyHostToDevice);
 
     cudaMemset(state->d_Ez_prev, 0, total_size);
     cudaMalloc(&(state->d_field), sizeof(EM_field_d));
@@ -116,6 +120,7 @@ void cleanup(SimState *state)
     cudaFree(state->d_sigma);
 
     cudaFree(state->d_label);
+    cudaFree(state->d_materials);
 
     cudaFree(state->d_field);
     cudaFree(state->d_Ez_prev);

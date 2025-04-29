@@ -22,8 +22,6 @@ typedef struct
     double *sigma;
 } EM_field_d;
 
-
-
 typedef struct
 {
     int mouseX, mouseY;
@@ -41,13 +39,14 @@ typedef struct
     int *d_label;
     double *d_Ez_prev;
     EM_field_d *d_field;
-    material * materials;
+    material *materials;
+    material *d_materials;
     int selected_material;
+    int num_materials;
 } SimState;
 
 #include "kernels.cuh"
 #include "util/pbo.cuh"
-
 
 // Function declarations
 void init_gpu(SimState *state);
