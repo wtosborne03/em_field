@@ -12,13 +12,14 @@ __global__ void updateE(EM_field_d *field, int width, int height, double dt, dou
     double eq1 = ((1.0 - (field->sigma[idx] * dt) / (2.0 * field->epsilon[idx])) /
               (1.0 + (field->sigma[idx] * dt) / (2.0 * field->epsilon[idx]))) * field->Ez[idx];
 
-    double eq2 = (dt / (field->epsilon[idx] * (1 + ((field->sigma[idx] * dt) / 2 * field->epsilon[idx] ))));
+    double eq2 = (dt / (field->epsilon[idx] * (1.0 + (field->sigma[idx] * dt) / (2.0 * field->epsilon[idx]))));
+
     double curl = (
         (field->Hy[idx] - field->Hy[idx - 1]) -
         (field->Hx[idx] - field->Hx[idx - width])
     );
 
-    field->Ez[idx] = (eq1 + (eq2 * curl)) / dx;
+    field->Ez[idx] = (eq1 + (eq2 * curl));
 }
 
 __global__ void updateH(EM_field_d *field, int width, int height, double dt, double dx) {
@@ -37,14 +38,21 @@ __global__ void updateH(EM_field_d *field, int width, int height, double dt, dou
 }
 
 // copy Ez to the PBO
-__global__ void write_to_pbo(EM_field_d *field, float *pbo, int n) {
+__global__ void write_to_pbo(EM_field_d *field, int * d_label, material * materials, float *pbo, int n) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= n) return;
 
     float v = fmaxf(fminf(field->Ez[idx], 1.0f), -1.0f);
 
+    if (d_label[idx] != 0) {
+        pbo[3 * idx + 0] = materials[d_label[idx]].v_r;
+        pbo[3 * idx + 1] = materials[d_label[idx]].v_g;
+        pbo[3 * idx + 2] = materials[d_label[idx]].v_b;
+        return;
+    }
+
     pbo[3 * idx + 0] = (v > 0.0f) ? v : 0.0f;
-    pbo[3 * idx + 1] = (field->sigma[idx] > 2.5f) ? 1.0f : 0.0f;
+    pbo[3 * idx + 1] = (float)d_label[idx];
     pbo[3 * idx + 2] = (v < 0.0f) ? -v: 0.0f;
 
 }
@@ -92,7 +100,7 @@ __global__ void gaussian_pulse(EM_field_d * field, int w, int h, int cx, int cy,
     field->Ez[y * w + x] += A * expf(-r2 / (2.0f * sigma * sigma));
 }
 
-__global__ void add_box(EM_field_d * field, int cx, int cy, int size, int width, int height, float eps0, float mu0) {
+__global__ void add_box(EM_field_d * field, int * d_label, int mat, material * materials, int cx, int cy, int size, int width, int height) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
     if (x >= width || y >= height) return;
@@ -103,9 +111,10 @@ __global__ void add_box(EM_field_d * field, int cx, int cy, int size, int width,
         y >= cy - half && y < cy + half)
     {
         int idx = y * width + x;
-        field->epsilon[idx] = eps0;
-        field->mu[idx] = mu0;
-        field->sigma[idx] = 1e9;
+        field->epsilon[idx] =  materials[mat].permittivity;
+        field->mu[idx] = materials[mat].permeability;
+        field->sigma[idx] = materials[mat].conductivity;
+        d_label[idx] = mat;
     }
     
 }

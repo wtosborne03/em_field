@@ -22,6 +22,8 @@ typedef struct
     double *sigma;
 } EM_field_d;
 
+
+
 typedef struct
 {
     int mouseX, mouseY;
@@ -29,13 +31,18 @@ typedef struct
     float amplitude;
     float boxSize;
 
+    float dx;
+
     GLuint pbo;
     cudaGraphicsResource *cuda_pbo_resource;
 
     double *d_Ez, *d_Hx, *d_Hy;
     double *d_epsilon, *d_mu, *d_sigma;
+    int *d_label;
     double *d_Ez_prev;
     EM_field_d *d_field;
+    material * materials;
+    int selected_material;
 } SimState;
 
 #include "kernels.cuh"

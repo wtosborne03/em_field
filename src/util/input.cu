@@ -39,7 +39,7 @@ void mouse_func(int button, int state, int x, int y)
         dim3 grid((SIZE_X + 15) / 16, (SIZE_Y + 15) / 16);
         local_state->mouseX = x;
         local_state->mouseY = y;
-        add_box<<<grid, block>>>(local_state->d_field, x, SIZE_Y - y, local_state->boxSize, SIZE_X, SIZE_Y, eps0, mu0);
+        add_box<<<grid, block>>>(local_state->d_field,local_state->d_label, local_state->selected_material, local_state->materials, x, SIZE_Y - y, local_state->boxSize, SIZE_X, SIZE_Y, eps0, mu0);
     }
 }
 
