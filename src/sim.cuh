@@ -25,8 +25,13 @@ typedef struct
 typedef struct
 {
     int mouseX, mouseY;
+
     bool mouseClicked;
+    bool shapeClicked;
+
     float amplitude;
+    float spread;
+
     float boxSize;
 
     float dx;
@@ -39,10 +44,13 @@ typedef struct
     int *d_label;
     double *d_Ez_prev;
     EM_field_d *d_field;
+    
     material *materials;
     material *d_materials;
     int selected_material;
     int num_materials;
+
+    int shape_type;
 } SimState;
 
 #include "kernels.cuh"

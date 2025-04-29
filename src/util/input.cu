@@ -10,7 +10,7 @@ void set_sim_state(SimState *state)
 void keyboard(unsigned char key, int x, int y)
 {
     if (key == 27)
-    { // eSC key
+    {
         cleanup(local_state);
         exit(0);
     }
@@ -30,13 +30,18 @@ void mouse_func(int button, int state, int x, int y)
             local_state->mouseClicked = false;
         }
     }
-    else if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
+    if (button == GLUT_RIGHT_BUTTON)
     {
-        dim3 block(16, 16);
-        dim3 grid((SIZE_X + 15) / 16, (SIZE_Y + 15) / 16);
-        local_state->mouseX = x;
-        local_state->mouseY = y;
-        add_box<<<grid, block>>>(local_state->d_field, local_state->d_label, local_state->selected_material, local_state->d_materials, x, SIZE_Y - y, local_state->boxSize, SIZE_X, SIZE_Y);
+        if (state == GLUT_DOWN) {
+            local_state->mouseX = x;
+            local_state->mouseY = y;
+            local_state->shapeClicked = true;
+        }
+        else {
+            local_state->shapeClicked = false;
+        }
+
+
     }
 }
 

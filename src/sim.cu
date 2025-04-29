@@ -4,6 +4,8 @@ const float mu0 = 4.0f * M_PI * 1e-7f; // permeability
 const float eps0 = 8.854187817e-12f;   // permittivity
 const float c = 1.0f / sqrt(mu0 * eps0);
 
+const float max_val = 100.0f;
+
 void init_gpu(SimState *state)
 {
     size_t total_size = SIZE_X * SIZE_Y * sizeof(double);
@@ -84,20 +86,30 @@ void display(SimState *state)
     updateH<<<grid, block>>>(state->d_field, SIZE_X, SIZE_Y, dt, dx);
     updateE<<<grid, block>>>(state->d_field, SIZE_X, SIZE_Y, dt, dx);
     apply_damping<<<(SIZE_X * SIZE_Y + 255) / 256, 256>>>(state->d_field, SIZE_X * SIZE_Y, 0.995f);
+    clamp_fields<<<(SIZE_X * SIZE_Y + 255) / 256, 256>>>(state->d_field, SIZE_X * SIZE_Y, max_val);
 
     mur_boundary<<<(SIZE_Y + 255) / 256, 256>>>(state->d_Ez, SIZE_X, SIZE_Y, (c * dt / dx), state->d_Ez_prev);
 
+    // apply input stuff
     if (state->mouseClicked)
     {
         dim3 block(16, 16), grid((SIZE_X + 15) / 16, (SIZE_Y + 15) / 16);
-        gaussian_pulse<<<grid, block>>>(state->d_field, SIZE_X, SIZE_Y, state->mouseX, SIZE_Y - state->mouseY, state->amplitude, 10.0f);
+        gaussian_pulse<<<grid, block>>>(state->d_field, SIZE_X, SIZE_Y, state->mouseX, SIZE_Y - state->mouseY, state->amplitude, state->spread);
+    } else if (state->shapeClicked) {
+        dim3 block(16, 16), grid((SIZE_X + 15) / 16, (SIZE_Y + 15) / 16);
+        if (state->shape_type == 0) {
+            add_box<<<grid, block>>>(state->d_field, state->d_label, state->selected_material, state->d_materials, state->mouseX, SIZE_Y - state->mouseY, state->boxSize, SIZE_X, SIZE_Y);
+        } else if (state->shape_type == 1) {
+            add_circle<<<grid, block>>>(state->d_field, state->d_label, state->selected_material, state->d_materials, state->mouseX, SIZE_Y - state->mouseY, state->boxSize, SIZE_X, SIZE_Y);
+        }
     }
+
     float *d_pbo;
     size_t num_bytes;
 
     cudaGraphicsMapResources(1, &(state->cuda_pbo_resource), 0);
     cudaGraphicsResourceGetMappedPointer((void **)&d_pbo, &num_bytes, state->cuda_pbo_resource);
-    write_to_pbo<<<(SIZE_X * SIZE_Y + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(state->d_field, state->d_label, state->materials, d_pbo, SIZE_X * SIZE_Y);
+    write_to_pbo<<<(SIZE_X * SIZE_Y + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(state->d_field, state->d_label, state->d_materials, d_pbo, SIZE_X * SIZE_Y);
     cudaGraphicsUnmapResources(1, &(state->cuda_pbo_resource), 0);
 
     glClear(GL_COLOR_BUFFER_BIT);
@@ -118,10 +130,8 @@ void cleanup(SimState *state)
     cudaFree(state->d_epsilon);
     cudaFree(state->d_mu);
     cudaFree(state->d_sigma);
-
     cudaFree(state->d_label);
     cudaFree(state->d_materials);
-
     cudaFree(state->d_field);
     cudaFree(state->d_Ez_prev);
     cudaGraphicsUnregisterResource(state->cuda_pbo_resource);
