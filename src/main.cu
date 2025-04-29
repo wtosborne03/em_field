@@ -30,12 +30,11 @@ int main(int argc, char **argv)
         NUM_MATERIALS
     } MaterialType;
 
-    // Predefined material list
     material material_list[NUM_MATERIALS] = {
-        [VACUUM] = {8.854e-12, 1.2566e-6, 0.0, 0.0f, 0.0f, 0.0f, "Vacuum"},
-        [AIR]    = {1.0006 * 8.854e-12, 1.2566e-6, 0.0, 0.5f, 0.5f, 1.0f, "Air"},
-        [GLASS]  = {4.5 * 8.854e-12, 1.2566e-6, 1e-12, 0.3f, 0.8f, 1.0f, "Glass"},
-        [METAL]  = {8.854e-12, 1.2566e-6, 1e7, 0.8f, 0.8f, 0.8f, "Metal"}
+        {8.854e-12, 1.2566e-6, 0.0, 0.0f, 0.0f, 0.0f, "Vacuum"}, // VACUUM
+        {1.0006 * 8.854e-12, 1.2566e-6, 0.0, 0.5f, 0.5f, 1.0f, "Air"},    // AIR
+        {4.5 * 8.854e-12, 1.2566e-6, 1e-12, 0.3f, 0.8f, 1.0f, "Glass"},  // GLASS
+        {8.854e-12, 1.2566e-6, 1e7, 0.8f, 0.8f, 0.8f, "Metal"}   // METAL
     };
 
     // defaults
@@ -45,9 +44,9 @@ int main(int argc, char **argv)
         .mouseClicked = false,
         .amplitude = 10.0f,
         .boxSize = 50.0f,
-        .dx = 0.5
-        .materials = material_list;
-        .selected_material = VACUUM;
+        .dx = 0.5,
+        .materials = material_list,
+        .selected_material = VACUUM
         };
     global_state = &state;
 
@@ -72,9 +71,9 @@ int main(int argc, char **argv)
     glui->add_spinner("Pulse Amplitude", GLUI_SPINNER_FLOAT, &(global_state->amplitude), 1, control_cb)->set_float_limits(2.0, 50.0);
     glui->add_spinner("Box Size", GLUI_SPINNER_FLOAT, &(global_state->boxSize), 1, control_cb)->set_float_limits(20.0, 200.0);
 
-    GLUI_Listbox *material_listbox = glui->add_listbox("Material Type", &(state->selected_material));
+    GLUI_Listbox *material_listbox = glui->add_listbox("Material Type", &(global_state->selected_material));
     for (int i = 0; i < NUM_MATERIALS; i++) {
-        material_listbox->add_item(i, state->materials[i]->name);
+        material_listbox->add_item(i, global_state->materials[i].name);
     }
     
     glui->set_main_gfx_window(main_window);

@@ -2,9 +2,6 @@
 
 static SimState *local_state = NULL;
 
-const float mu0 = 4.0f * M_PI * 1e-7f; // permeability
-const float eps0 = 8.854187817e-12f;   // permittivity
-
 void set_sim_state(SimState *state)
 {
     local_state = state;
@@ -39,7 +36,7 @@ void mouse_func(int button, int state, int x, int y)
         dim3 grid((SIZE_X + 15) / 16, (SIZE_Y + 15) / 16);
         local_state->mouseX = x;
         local_state->mouseY = y;
-        add_box<<<grid, block>>>(local_state->d_field,local_state->d_label, local_state->selected_material, local_state->materials, x, SIZE_Y - y, local_state->boxSize, SIZE_X, SIZE_Y, eps0, mu0);
+        add_box<<<grid, block>>>(local_state->d_field,local_state->d_label, local_state->selected_material, local_state->materials, x, SIZE_Y - y, local_state->boxSize, SIZE_X, SIZE_Y);
     }
 }
 
