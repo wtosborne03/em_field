@@ -10,7 +10,8 @@ const float CeE = dt / (eps0 * dx);
 
 void init_gpu(SimState *state)
 {
-    size_t total_size = SIZE_X * SIZE_Y * sizeof(double);
+    size_t total_elements = SIZE_X * SIZE_Y;
+    size_t total_size = total_elements * sizeof(double);
 
     cudaMalloc(&(state->d_Ez), total_size);
     cudaMalloc(&(state->d_Hx), total_size);
@@ -20,24 +21,37 @@ void init_gpu(SimState *state)
     cudaMalloc(&(state->d_mu), total_size);
     cudaMalloc(&(state->d_sigma), total_size);
 
+    cudaMalloc(&(state->d_Ez_prev), total_size); // same size as Ez
 
-    cudaMalloc(&(state->d_Ez_prev), total_size);  // same size as Ez
-
-    //memset
+    // memset device arrays
     cudaMemset(state->d_Ez, 0, total_size);
     cudaMemset(state->d_Hx, 0, total_size);
     cudaMemset(state->d_Hy, 0, total_size);
-
-
-
-    cudaMemset(state->d_epsilon, 0, total_size);
-    cudaMemset(state->d_mu, 0, total_size);
-    cudaMemset(state->d_sigma, 0, total_size);
-
     cudaMemset(state->d_Ez_prev, 0, total_size);
+
+    // Allocate host memory for initial material properties
+    std::vector<double> h_epsilon(total_elements);
+    std::vector<double> h_mu(total_elements);
+    std::vector<double> h_sigma(total_elements);
+
+    // Initialize host arrays (simulating air)
+    for (size_t i = 0; i < total_elements; ++i)
+    {
+        h_epsilon[i] = eps0;
+        h_mu[i] = mu0;
+        h_sigma[i] = 0.0;
+    }
+
+    // Copy initial material properties from host to device
+    cudaMemcpy(state->d_epsilon, h_epsilon.data(), total_size, cudaMemcpyHostToDevice);
+    cudaMemcpy(state->d_mu, h_mu.data(), total_size, cudaMemcpyHostToDevice);
+    cudaMemcpy(state->d_sigma, h_sigma.data(), total_size, cudaMemcpyHostToDevice);
+
+    // Allocate device memory for the EM_field_d struct itself
     cudaMalloc(&(state->d_field), sizeof(EM_field_d));
 
-    EM_field_d h_field; // Host-side temporary struct
+    // Create a host-side struct containing the *device* pointers
+    EM_field_d h_field;
     h_field.Ez = state->d_Ez;
     h_field.Hx = state->d_Hx;
     h_field.Hy = state->d_Hy;
@@ -45,16 +59,7 @@ void init_gpu(SimState *state)
     h_field.mu = state->d_mu;
     h_field.sigma = state->d_sigma;
 
-    // need to set initial material arrays on host before copying to device
-    // needed for simulating air at start
-    for (int i = 0; i < SIZE_X; i++) {
-        for (int j = 0; j < SIZE_Y; j++) {
-            h_field.epsilon[i * SIZE_X + j] = eps0;
-            h_field.mu[i * SIZE_X + j] = mu0;
-            h_field.sigma[i * SIZE_X + j] = 0.0;
-        }
-    }
-
+    // Copy the struct (containing device pointers) to the device
     cudaMemcpy(state->d_field, &h_field, sizeof(EM_field_d), cudaMemcpyHostToDevice);
 }
 
@@ -84,7 +89,7 @@ void display(SimState *state)
 
     cudaGraphicsMapResources(1, &(state->cuda_pbo_resource), 0);
     cudaGraphicsResourceGetMappedPointer((void **)&d_pbo, &num_bytes, state->cuda_pbo_resource);
-    write_to_pbo<<<(SIZE_X * SIZE_Y + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(state->d_field,  d_pbo, SIZE_X * SIZE_Y);
+    write_to_pbo<<<(SIZE_X * SIZE_Y + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(state->d_field, d_pbo, SIZE_X * SIZE_Y);
     cudaGraphicsUnmapResources(1, &(state->cuda_pbo_resource), 0);
 
     glClear(GL_COLOR_BUFFER_BIT);
