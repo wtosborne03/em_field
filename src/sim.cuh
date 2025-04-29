@@ -16,6 +16,10 @@ typedef struct
     double *Ez;
     double *Hx;
     double *Hy;
+
+    double *epsilon;
+    double *mu;
+    double *sigma;
 } EM_field_d;
 
 typedef struct
@@ -29,13 +33,12 @@ typedef struct
     cudaGraphicsResource *cuda_pbo_resource;
 
     double *d_Ez, *d_Hx, *d_Hy;
+    double *d_epsilon, *d_mu, *d_sigma;
     double *d_Ez_prev;
-    double *d_Pec_Mask;
     EM_field_d *d_field;
 } SimState;
 
 #include "kernels.cuh"
-
 #include "util/pbo.cuh"
 
 

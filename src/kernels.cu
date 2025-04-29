@@ -1,6 +1,6 @@
 #include "kernels.cuh"
 
-__global__ void updateE(EM_field_d *field, int width, int height, double CeE) {
+__global__ void updateE(EM_field_d *field, int width, int height, double dt, double dx) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -9,13 +9,19 @@ __global__ void updateE(EM_field_d *field, int width, int height, double CeE) {
 
     int idx = y * width + x;
 
-    field->Ez[idx] += CeE * (
+    double eq1 = ((1.0 - (field->sigma[idx] * dt) / (2.0 * field->epsilon[idx])) /
+              (1.0 + (field->sigma[idx] * dt) / (2.0 * field->epsilon[idx]))) * field->Ez[idx];
+
+    double eq2 = (dt / (field->epsilon[idx] * (1 + ((field->sigma[idx] * dt) / 2 * field->epsilon[idx] ))));
+    double curl = (
         (field->Hy[idx] - field->Hy[idx - 1]) -
         (field->Hx[idx] - field->Hx[idx - width])
     );
+
+    field->Ez[idx] = (eq1 + (eq2 * curl)) / dx;
 }
 
-__global__ void updateH(EM_field_d *field, int width, int height, double CeH) {
+__global__ void updateH(EM_field_d *field, int width, int height, double dt, double dx) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -23,6 +29,7 @@ __global__ void updateH(EM_field_d *field, int width, int height, double CeH) {
 
     int idx = y * width + x;
 
+    double CeH = dt / (field->mu[idx] * dx);
 
     field->Hx[idx] -= CeH * (field->Ez[idx + width] - field->Ez[idx]);
     field->Hy[idx] += CeH * (field->Ez[idx + 1] - field->Ez[idx]);
@@ -30,14 +37,14 @@ __global__ void updateH(EM_field_d *field, int width, int height, double CeH) {
 }
 
 // copy Ez to the PBO
-__global__ void write_to_pbo(EM_field_d *field, double * pec_mask, float *pbo, int n) {
+__global__ void write_to_pbo(EM_field_d *field, float *pbo, int n) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= n) return;
 
     float v = fmaxf(fminf(field->Ez[idx], 1.0f), -1.0f);
 
     pbo[3 * idx + 0] = (v > 0.0f) ? v : 0.0f;
-    pbo[3 * idx + 1] = (pec_mask[idx] > 0.5f) ? 1.0f : 0.0f;
+    pbo[3 * idx + 1] = (field->sigma[idx] > 2.5f) ? 1.0f : 0.0f;
     pbo[3 * idx + 2] = (v < 0.0f) ? -v: 0.0f;
 
 }
@@ -85,7 +92,7 @@ __global__ void gaussian_pulse(EM_field_d * field, int w, int h, int cx, int cy,
     field->Ez[y * w + x] += A * expf(-r2 / (2.0f * sigma * sigma));
 }
 
-__global__ void add_box(double * pec_mask, int cx, int cy, int size, int width, int height) {
+__global__ void add_box(EM_field_d * field, int cx, int cy, int size, int width, int height, float eps0, float mu0) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
     if (x >= width || y >= height) return;
@@ -96,16 +103,9 @@ __global__ void add_box(double * pec_mask, int cx, int cy, int size, int width, 
         y >= cy - half && y < cy + half)
     {
         int idx = y * width + x;
-        pec_mask[idx] = 1.0f;
+        field->epsilon[idx] = eps0;
+        field->mu[idx] = mu0;
+        field->sigma[idx] = 1e9;
     }
     
-
-}
-
-__global__ void apply_pec_mask(EM_field_d * field, double * pec_mask, int n) {
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx >= n) return;
-    if(pec_mask[idx] > 0.5f) {
-        field->Ez[idx] = 0.0f;
-    }
 }

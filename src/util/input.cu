@@ -21,6 +21,8 @@ void mouse_func(int button, int state, int x, int y)
     {
         if (state == GLUT_DOWN)
         {
+            local_state->mouseX = x;
+            local_state->mouseY = y;
             local_state->mouseClicked = true;
         }
         else
@@ -32,7 +34,9 @@ void mouse_func(int button, int state, int x, int y)
     {
         dim3 block(16, 16);
         dim3 grid((SIZE_X + 15) / 16, (SIZE_Y + 15) / 16);
-        add_box<<<grid, block>>>(local_state->d_Pec_Mask, x, SIZE_Y - y, local_state->boxSize, SIZE_X, SIZE_Y);
+        local_state->mouseX = x;
+        local_state->mouseY = y;
+        add_box<<<grid, block>>>(local_state->d_field, x, SIZE_Y - y, local_state->boxSize, SIZE_X, SIZE_Y);
     }
 }
 
