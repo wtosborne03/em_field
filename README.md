@@ -1,5 +1,7 @@
 # CUDA 2-D FDTD electromagnetic solver (Clemson CPSC 4780)
 
+![screenshot](https://github.com/wtosborne03/em_field/blob/main/sim_screenshot.png?raw=true)
+
 ## Project Overview
 
 This project implements a 2-dimensional Finite-Difference Time-Domain (FDTD) method to simulate electromagnetic wave propagation. It leverages NVIDIA CUDA for parallel computation on the GPU to accelerate the simulation process. The visualization is handled using OpenGL and GLUI.
